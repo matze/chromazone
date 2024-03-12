@@ -1,0 +1,12 @@
+[package]
+name = "chromazone"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "cz"
+path = "src/main.rs"
+
+[dependencies]
+ansi_term = "0.12.1"
+regex = "1.10.3"
