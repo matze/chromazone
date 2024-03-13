@@ -30,6 +30,18 @@ struct Regions<'input, 'style> {
     text: &'input str,
     /// Available match expressions and styles.
     styles: &'style [MatchStyle],
+    /// Previous match.
+    previous: Option<(&'input str, &'style Style)>,
+}
+
+impl<'input, 'style> Regions<'input, 'style> {
+    fn new(text: &'input str, styles: &'style [MatchStyle]) -> Self {
+        Self {
+            text,
+            styles,
+            previous: None,
+        }
+    }
 }
 
 impl<'input, 'style> Iterator for Regions<'input, 'style> {
@@ -40,7 +52,10 @@ impl<'input, 'style> Iterator for Regions<'input, 'style> {
             return None;
         }
 
-        // TODO: fix inefficiency of discarding the matches.
+        if let Some((text, style)) = self.previous.take() {
+            return Some(Region::Matched { text, style });
+        }
+
         match self
             .styles
             .iter()
@@ -55,8 +70,11 @@ impl<'input, 'style> Iterator for Regions<'input, 'style> {
                 let start = m.start();
 
                 if start > 0 {
+                    // The match is not at the beginning, so store it, return unmatched text now
+                    // and the match in the next iteration.
                     let text = &self.text[..start];
-                    self.text = &self.text[start..];
+                    self.text = &self.text[m.end()..];
+                    self.previous = Some((m.as_str(), style));
 
                     Some(Region::Unmatched { text })
                 } else {
@@ -103,12 +121,8 @@ fn main() -> ExitCode {
 
     for line in std::io::stdin().lines() {
         let text = line.unwrap();
-        let regions = Regions {
-            text: &text,
-            styles: &styles,
-        };
 
-        for region in regions {
+        for region in Regions::new(&text, &styles) {
             match region {
                 Region::Unmatched { text } => print!("{text}"),
                 Region::Matched { text, style } => print!("{}", style.paint(text)),
@@ -133,10 +147,7 @@ mod tests {
             style: Style::new(),
         }];
 
-        let mut regions = Regions {
-            text: "haystack",
-            styles,
-        };
+        let mut regions = Regions::new("haystack", styles);
 
         assert!(matches!(
             regions.next(),
@@ -154,10 +165,7 @@ mod tests {
             style: Style::new(),
         }];
 
-        let mut regions = Regions {
-            text: "a needle in the haystack",
-            styles,
-        };
+        let mut regions = Regions::new("a needle in the haystack", styles);
 
         assert!(matches!(
             regions.next(),
