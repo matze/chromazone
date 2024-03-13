@@ -34,6 +34,15 @@ struct Regions<'input, 'style> {
     previous: Option<(&'input str, &'style Style)>,
 }
 
+/// Parsed command line options.
+#[derive(Default)]
+struct Opts {
+    /// `true` if help is requested.
+    help: bool,
+    /// Loaded match style.
+    styles: Vec<MatchStyle>,
+}
+
 impl<'input, 'style> Regions<'input, 'style> {
     fn new(text: &'input str, styles: &'style [MatchStyle]) -> Self {
         Self {
@@ -89,40 +98,54 @@ impl<'input, 'style> Iterator for Regions<'input, 'style> {
     }
 }
 
-fn main() -> ExitCode {
-    let mut args = std::env::args().skip(1);
+impl Opts {
+    fn parse() -> Result<Self, String> {
+        let mut opts = Self::default();
+        let mut args = std::env::args().skip(1);
 
-    let styles = match (args.next(), args.next()) {
-        (Some(opt), None) => {
-            if opt == "--help" || opt == "-h" {
-                println!("Usage: <prog> | cz [--style <style>] [-h|--help]");
-                return ExitCode::SUCCESS;
+        while let Some(arg) = args.next() {
+            if arg == "--help" || arg == "-h" {
+                opts.help = true;
             }
 
-            vec![]
-        }
-        (Some(opt), Some(arg)) => {
-            if opt == "--style" || opt == "-s" {
-                match arg.as_str() {
-                    "diff" => styles::diff(),
-                    _ => {
-                        eprintln!("Error: unknown style '{arg}'");
-                        return ExitCode::FAILURE;
+            if arg == "--style" || arg == "-s" {
+                match args.next() {
+                    None => {
+                        return Err("expected style after --style/-s".into());
+                    }
+                    Some(name) => {
+                        if name == "diff" {
+                            opts.styles = styles::diff();
+                        } else {
+                            return Err(format!("unknown style '{name}'"));
+                        }
                     }
                 }
-            } else {
-                vec![]
             }
         }
-        _ => {
-            vec![]
+
+        Ok(opts)
+    }
+}
+
+fn main() -> ExitCode {
+    let opts = match Opts::parse() {
+        Err(err) => {
+            eprintln!("Error: {err}");
+            return ExitCode::FAILURE;
         }
+        Ok(opts) => opts,
     };
+
+    if opts.help {
+        println!("Usage: <prog> | cz [--style <style>] [-h|--help]");
+        return ExitCode::SUCCESS;
+    }
 
     for line in std::io::stdin().lines() {
         let text = line.unwrap();
 
-        for region in Regions::new(&text, &styles) {
+        for region in Regions::new(&text, &opts.styles) {
             match region {
                 Region::Unmatched { text } => print!("{text}"),
                 Region::Matched { text, style } => print!("{}", style.paint(text)),
