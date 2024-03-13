@@ -8,5 +8,5 @@ name = "cz"
 path = "src/main.rs"
 
 [dependencies]
-ansi_term = "0.12.1"
+owo-colors = "4.0.0"
 regex = "1.10.3"

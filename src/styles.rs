@@ -1,5 +1,5 @@
 use crate::MatchStyle;
-use ansi_term::{Color, Style};
+use owo_colors::Style;
 use regex::Regex;
 
 /// Style for `diff -u` output.
@@ -7,15 +7,15 @@ pub fn diff() -> Vec<MatchStyle> {
     vec![
         MatchStyle {
             expr: Regex::new(r"^\+.*$").unwrap(),
-            style: Style::new().fg(Color::Green),
+            style: Style::new().bright_green(),
         },
         MatchStyle {
             expr: Regex::new(r"^\-.*$").unwrap(),
-            style: Style::new().fg(Color::Red),
+            style: Style::new().bright_red(),
         },
         MatchStyle {
             expr: Regex::new(r"^@@.*$").unwrap(),
-            style: Style::new().fg(Color::Yellow),
+            style: Style::new().yellow(),
         },
     ]
 }

@@ -1,4 +1,4 @@
-use ansi_term::Style;
+use owo_colors::Style;
 use regex::Regex;
 use std::process::ExitCode;
 
@@ -148,7 +148,7 @@ fn main() -> ExitCode {
         for region in Regions::new(&text, &opts.styles) {
             match region {
                 Region::Unmatched { text } => print!("{text}"),
-                Region::Matched { text, style } => print!("{}", style.paint(text)),
+                Region::Matched { text, style } => print!("{}", style.style(text)),
             }
         }
 
