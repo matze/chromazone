@@ -6,11 +6,16 @@ mod styles;
 
 /// Style for a matched region.
 struct MatchStyle {
-    /// Regular expression whose match will be styled with `style`.
-    expr: Regex,
+    /// Regular expression pattern whose match will be styled with `style`.
+    pattern: Regex,
     /// Text style for the match.
     style: Style,
 }
+
+/// String description of a style.
+///
+/// Description consists of a comma-separated list of colors and effects.
+struct Description<'input>(&'input str);
 
 /// Region inside a line which is either unmatched and printed verbatim or matched and printed with
 /// a style applied.
@@ -68,14 +73,14 @@ impl<'input, 'style> Iterator for Regions<'input, 'style> {
         match self
             .styles
             .iter()
-            .find_map(|style| style.expr.find(self.text).map(|m| (m, style)))
+            .find_map(|style| style.pattern.find(self.text).map(|m| (m, style)))
         {
             None => {
                 let text = self.text;
                 self.text = &self.text[self.text.len()..];
                 Some(Region::Unmatched { text })
             }
-            Some((m, MatchStyle { expr: _, style })) => {
+            Some((m, MatchStyle { pattern: _, style })) => {
                 let start = m.start();
 
                 if start > 0 {
@@ -122,9 +127,49 @@ impl Opts {
                     }
                 }
             }
+
+            if arg == "--match" || arg == "-m" {
+                match (args.next(), args.next()) {
+                    (Some(pattern), Some(description)) => {
+                        let pattern = Regex::new(&pattern).map_err(|err| err.to_string())?;
+                        let style = Description(&description).try_into()?;
+                        opts.styles = vec![MatchStyle { pattern, style }];
+                    }
+                    _ => return Err("expected pattern and style after --match/-m".into()),
+                }
+            }
         }
 
         Ok(opts)
+    }
+}
+
+impl<'input> TryFrom<Description<'input>> for Style {
+    type Error = String;
+
+    fn try_from(value: Description<'input>) -> Result<Self, Self::Error> {
+        let mut style = Style::new();
+
+        for part in value.0.split(',') {
+            match part.trim() {
+                "black" => style = style.black(),
+                "blue" => style = style.blue(),
+                "cyan" => style = style.cyan(),
+                "green" => style = style.green(),
+                "magenta" => style = style.magenta(),
+                "purple" => style = style.magenta(),
+                "red" => style = style.red(),
+                "white" => style = style.white(),
+                "yellow" => style = style.yellow(),
+                "bold" => style = style.bold(),
+                "italic" => style = style.italic(),
+                "strike" => style = style.strikethrough(),
+                "underline" => style = style.underline(),
+                _ => return Err(format!("unknown style part '{part}'")),
+            }
+        }
+
+        Ok(style)
     }
 }
 
@@ -168,9 +213,9 @@ mod tests {
 
     #[test]
     fn no_match() {
-        let expr = Regex::new("needle").unwrap();
+        let pattern = Regex::new("needle").unwrap();
         let styles = &[MatchStyle {
-            expr,
+            pattern,
             style: Style::new(),
         }];
 
@@ -186,9 +231,9 @@ mod tests {
 
     #[test]
     fn match_in_the_middle() {
-        let expr = Regex::new("needle").unwrap();
+        let pattern = Regex::new("needle").unwrap();
         let styles = &[MatchStyle {
-            expr,
+            pattern,
             style: Style::new(),
         }];
 

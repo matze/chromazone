@@ -6,15 +6,15 @@ use regex::Regex;
 pub fn diff() -> Vec<MatchStyle> {
     vec![
         MatchStyle {
-            expr: Regex::new(r"^\+.*$").unwrap(),
+            pattern: Regex::new(r"^\+.*$").unwrap(),
             style: Style::new().bright_green(),
         },
         MatchStyle {
-            expr: Regex::new(r"^\-.*$").unwrap(),
+            pattern: Regex::new(r"^\-.*$").unwrap(),
             style: Style::new().bright_red(),
         },
         MatchStyle {
-            expr: Regex::new(r"^@@.*$").unwrap(),
+            pattern: Regex::new(r"^@@.*$").unwrap(),
             style: Style::new().yellow(),
         },
     ]
