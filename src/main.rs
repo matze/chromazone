@@ -1,4 +1,4 @@
-use owo_colors::Style;
+use owo_colors::{OwoColorize, Style};
 use regex::Regex;
 use std::process::ExitCode;
 
@@ -122,7 +122,7 @@ impl Opts {
                         if name == "diff" {
                             opts.styles = styles::diff();
                         } else {
-                            return Err(format!("unknown style '{name}'"));
+                            return Err(format!("unknown style '{}'", name.yellow().bold()));
                         }
                     }
                 }
@@ -165,7 +165,7 @@ impl<'input> TryFrom<Description<'input>> for Style {
                 "italic" => style = style.italic(),
                 "strike" => style = style.strikethrough(),
                 "underline" => style = style.underline(),
-                _ => return Err(format!("unknown style part '{part}'")),
+                _ => return Err(format!("unknown style part '{}'", part.yellow().bold())),
             }
         }
 
@@ -200,7 +200,7 @@ fn try_main() -> Result<(), String> {
 fn main() -> ExitCode {
     match try_main() {
         Err(err) => {
-            eprintln!("Error: {err}");
+            eprintln!("{}: {err}", "error".red().bold());
             ExitCode::FAILURE
         }
         Ok(()) => ExitCode::SUCCESS,
