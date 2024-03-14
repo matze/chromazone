@@ -120,7 +120,7 @@ impl Opts {
                     }
                     Some(name) => {
                         if name == "diff" {
-                            opts.styles = styles::diff();
+                            opts.styles.append(&mut styles::diff());
                         } else {
                             return Err(format!("unknown style '{}'", name.yellow().bold()));
                         }
@@ -133,7 +133,7 @@ impl Opts {
                     (Some(pattern), Some(description)) => {
                         let pattern = Regex::new(&pattern).map_err(|err| err.to_string())?;
                         let style = Description(&description).try_into()?;
-                        opts.styles = vec![MatchStyle { pattern, style }];
+                        opts.styles.push(MatchStyle { pattern, style });
                     }
                     _ => return Err("expected pattern and style after --match/-m".into()),
                 }
