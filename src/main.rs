@@ -128,22 +128,16 @@ impl Opts {
     }
 }
 
-fn main() -> ExitCode {
-    let opts = match Opts::parse() {
-        Err(err) => {
-            eprintln!("Error: {err}");
-            return ExitCode::FAILURE;
-        }
-        Ok(opts) => opts,
-    };
+fn try_main() -> Result<(), String> {
+    let opts = Opts::parse()?;
 
     if opts.help {
         println!("Usage: <prog> | cz [--style <style>] [-h|--help]");
-        return ExitCode::SUCCESS;
+        return Ok(());
     }
 
     for line in std::io::stdin().lines() {
-        let text = line.unwrap();
+        let text = line.map_err(|err| err.to_string())?;
 
         for region in Regions::new(&text, &opts.styles) {
             match region {
@@ -155,7 +149,17 @@ fn main() -> ExitCode {
         println!();
     }
 
-    ExitCode::SUCCESS
+    Ok(())
+}
+
+fn main() -> ExitCode {
+    match try_main() {
+        Err(err) => {
+            eprintln!("Error: {err}");
+            ExitCode::FAILURE
+        }
+        Ok(()) => ExitCode::SUCCESS,
+    }
 }
 
 #[cfg(test)]
