@@ -82,11 +82,13 @@ impl<'input, 'style> Iterator for Regions<'input, 'style> {
             return Some(Region::Matched { text, style });
         }
 
-        match self
+        let m = self
             .styles
             .iter()
-            .find_map(|style| style.pattern.find(self.text).map(|m| (m, style)))
-        {
+            .filter_map(|style| style.pattern.find(self.text).map(|m| (m, style)))
+            .min_by(|x, y| x.0.start().cmp(&y.0.start()));
+
+        match m {
             None => {
                 let text = self.text;
                 self.text = &self.text[self.text.len()..];
