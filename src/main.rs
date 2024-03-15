@@ -39,6 +39,12 @@ struct Regions<'input, 'style> {
     previous: Option<(&'input str, &'style Style)>,
 }
 
+/// Parser to match regions over lines.
+struct Parser<'style> {
+    /// Available match expressions and styles.
+    styles: &'style [MatchStyle],
+}
+
 /// Parsed command line options.
 #[derive(Default)]
 struct Opts {
@@ -48,11 +54,17 @@ struct Opts {
     styles: Vec<MatchStyle>,
 }
 
-impl<'input, 'style> Regions<'input, 'style> {
-    fn new(text: &'input str, styles: &'style [MatchStyle]) -> Self {
-        Self {
+impl<'style> Parser<'style> {
+    /// Create new [`Parser`] given the `styles` match patterns.
+    fn new(styles: &'style [MatchStyle]) -> Self {
+        Self { styles }
+    }
+
+    /// Return [`Regions`] iterator over matched and umatched regions found in `text`.
+    fn regions<'input>(&self, text: &'input str) -> Regions<'input, 'style> {
+        Regions {
             text,
-            styles,
+            styles: self.styles,
             previous: None,
         }
     }
@@ -188,11 +200,12 @@ fn try_main() -> Result<(), String> {
     }
 
     let mut buf = String::new();
+    let parser = Parser::new(&opts.styles);
 
     while read_line(&mut buf)? > 0 {
         let line = &buf[..buf.len() - 1];
 
-        for region in Regions::new(line, &opts.styles) {
+        for region in parser.regions(line) {
             match region {
                 Region::Unmatched { text } => print!("{text}"),
                 Region::Matched { text, style } => print!("{}", style.style(text)),
@@ -228,7 +241,8 @@ mod tests {
             style: Style::new(),
         }];
 
-        let mut regions = Regions::new("haystack", styles);
+        let parser = Parser::new(styles);
+        let mut regions = parser.regions("haystack");
 
         assert!(matches!(
             regions.next(),
@@ -246,7 +260,8 @@ mod tests {
             style: Style::new(),
         }];
 
-        let mut regions = Regions::new("a needle in the haystack", styles);
+        let parser = Parser::new(styles);
+        let mut regions = parser.regions("a needle in the haystack");
 
         assert!(matches!(
             regions.next(),
