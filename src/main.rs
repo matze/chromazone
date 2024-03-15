@@ -169,7 +169,7 @@ impl<'input> TryFrom<Description<'input>> for Style {
                 "cyan" => style = style.cyan(),
                 "green" => style = style.green(),
                 "magenta" => style = style.magenta(),
-                "purple" => style = style.magenta(),
+                "purple" => style = style.purple(),
                 "red" => style = style.red(),
                 "white" => style = style.white(),
                 "yellow" => style = style.yellow(),
