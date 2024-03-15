@@ -173,6 +173,12 @@ impl<'input> TryFrom<Description<'input>> for Style {
     }
 }
 
+fn read_line(buf: &mut String) -> Result<usize, String> {
+    std::io::stdin()
+        .read_line(buf)
+        .map_err(|err| err.to_string())
+}
+
 fn try_main() -> Result<(), String> {
     let opts = Opts::parse()?;
 
@@ -181,10 +187,12 @@ fn try_main() -> Result<(), String> {
         return Ok(());
     }
 
-    for line in std::io::stdin().lines() {
-        let text = line.map_err(|err| err.to_string())?;
+    let mut buf = String::new();
 
-        for region in Regions::new(&text, &opts.styles) {
+    while read_line(&mut buf)? > 0 {
+        let line = &buf[..buf.len() - 1];
+
+        for region in Regions::new(line, &opts.styles) {
             match region {
                 Region::Unmatched { text } => print!("{text}"),
                 Region::Matched { text, style } => print!("{}", style.style(text)),
@@ -192,6 +200,7 @@ fn try_main() -> Result<(), String> {
         }
 
         println!();
+        buf.clear();
     }
 
     Ok(())
