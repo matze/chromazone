@@ -17,6 +17,9 @@ struct MatchStyle {
 /// Description consists of a comma-separated list of colors and effects.
 struct Description<'input>(&'input str);
 
+/// List of match styles.
+struct MatchStyles<'style>(&'style [MatchStyle]);
+
 /// Region inside a line which is either unmatched and printed verbatim or matched and printed with
 /// a style applied.
 enum Region<'input, 'style> {
@@ -34,7 +37,7 @@ struct Regions<'input, 'style> {
     /// Remaining text to be matched.
     text: &'input str,
     /// Available match expressions and styles.
-    styles: &'style [MatchStyle],
+    styles: &'style MatchStyles<'style>,
     /// Previous match.
     previous: Option<(&'input str, &'style Style)>,
 }
@@ -42,7 +45,7 @@ struct Regions<'input, 'style> {
 /// Parser to match regions over lines.
 struct Parser<'style> {
     /// Available match expressions and styles.
-    styles: &'style [MatchStyle],
+    styles: MatchStyles<'style>,
 }
 
 /// Parsed command line options.
@@ -57,16 +60,36 @@ struct Opts {
 impl<'style> Parser<'style> {
     /// Create new [`Parser`] given the `styles` match patterns.
     fn new(styles: &'style [MatchStyle]) -> Self {
-        Self { styles }
+        Self {
+            styles: MatchStyles::new(styles),
+        }
     }
 
     /// Return [`Regions`] iterator over matched and umatched regions found in `text`.
-    fn regions<'input>(&self, text: &'input str) -> Regions<'input, 'style> {
+    fn regions<'input>(&'style self, text: &'input str) -> Regions<'input, 'style> {
         Regions {
             text,
-            styles: self.styles,
+            styles: &self.styles,
             previous: None,
         }
+    }
+}
+
+impl<'style> MatchStyles<'style> {
+    /// Create a new [`MatchStyles`] object.
+    fn new(styles: &'style [MatchStyle]) -> Self {
+        Self(styles)
+    }
+
+    /// Find a match in `text` and the corresponding style or `None`.
+    fn find_match<'input>(
+        &self,
+        text: &'input str,
+    ) -> Option<(regex::Match<'input>, &'style Style)> {
+        self.0
+            .iter()
+            .filter_map(|style| style.pattern.find(text).map(|m| (m, &style.style)))
+            .min_by(|x, y| x.0.start().cmp(&y.0.start()))
     }
 }
 
@@ -82,19 +105,13 @@ impl<'input, 'style> Iterator for Regions<'input, 'style> {
             return Some(Region::Matched { text, style });
         }
 
-        let m = self
-            .styles
-            .iter()
-            .filter_map(|style| style.pattern.find(self.text).map(|m| (m, style)))
-            .min_by(|x, y| x.0.start().cmp(&y.0.start()));
-
-        match m {
+        match self.styles.find_match(self.text) {
             None => {
                 let text = self.text;
                 self.text = &self.text[self.text.len()..];
                 Some(Region::Unmatched { text })
             }
-            Some((m, MatchStyle { pattern: _, style })) => {
+            Some((m, style)) => {
                 let start = m.start();
 
                 if start > 0 {
