@@ -2,7 +2,7 @@ use owo_colors::{OwoColorize, Style};
 use regex::Regex;
 use std::process::ExitCode;
 
-mod styles;
+mod config;
 
 /// Style for a matched region.
 struct MatchStyle {
@@ -150,11 +150,8 @@ impl Opts {
                         return Err("expected style after --style/-s".into());
                     }
                     Some(name) => {
-                        if name == "diff" {
-                            opts.styles.append(&mut styles::diff());
-                        } else {
-                            return Err(format!("unknown style '{}'", name.yellow().bold()));
-                        }
+                        opts.styles
+                            .append(&mut config::read_style_from_config(&name)?);
                     }
                 }
             }
