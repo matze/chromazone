@@ -18,7 +18,9 @@ For one-off uses, pipe some output into to the `cz` binary and pass regex
 patterns and corresponding color and effect descriptions with the `-m` or
 `--match` argument like so
 
-    cat README.md | cz -m "\[[^\[]*\]" red,underline -m "^# .*$" yellow,bold
+```sh
+cat README.md | cz -m "\[[^\[]*\]" red,underline -m "^# .*$" yellow,bold
+```
 
 which should give the following output
 
@@ -38,7 +40,9 @@ descriptions like this
 
 The style can then specified with the `-s` or `--style` argument
 
-    diff Cargo.toml Cargo.lock | cz -s diff
+```sh
+diff Cargo.toml Cargo.lock | cz -s diff
+```
 
 Note that you can still extend given styles with additional `-m` arguments.
 
