@@ -220,7 +220,11 @@ fn try_main() -> Result<(), String> {
     let opts = Opts::parse()?;
 
     if opts.help {
-        println!("Usage: <prog> | cz [--style <style>] [-h|--help]");
+        println!(
+            "{}: <prog> | {} [--style <style>] [-m|--match <pattern> <description>] [-h|--help]",
+            "Usage".green().bold(),
+            "cz".green().bold()
+        );
         return Ok(());
     }
 
