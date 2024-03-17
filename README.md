@@ -1,4 +1,4 @@
-# Chromazone 🎨
+# chromazone (cz) 🎨
 
 Chromazone is a [banger tune](https://www.youtube.com/watch?v=s1BVwsyznKw) by
 Mike Stern and a terminal colorizer.
@@ -11,6 +11,9 @@ Why not [colorizer](https://github.com/kulinsky/colorizer) or
 * ✨ most color and effect combinations
 * 📝 arguably the simplest configuration format
 
+## CHANGELOG
+
+See the [CHANGELOG](CHANGELOG.md) for a release history.
 
 ## Usage
 
@@ -47,7 +50,7 @@ diff Cargo.toml Cargo.lock | cz -s diff
 Note that you can still extend given styles with additional `-m` arguments.
 
 
-## Style descriptions
+### Style descriptions
 
 Style descriptions are comma-separated lists of foreground colors (`black`,
 `blue`, `cyan`, `green`, `magenta`, `purple`, `red`, `white` and `yellow`),
@@ -55,6 +58,14 @@ background colors (`b:black`, `b:blue`, `b:cyan`, `b:green`, `b:magenta`,
 `b:purple`, `b:red`, `b:white` and `b:yellow`) and effects (`bold`, `italic`,
 `underline` and `strike`).
 
+
+## Installation
+
+For now you need a Rust toolchain and install it via `cargo`:
+
+```sh
+cargo install chromazone
+```
 
 ## License
 

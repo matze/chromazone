@@ -1,7 +1,13 @@
 [package]
 name = "chromazone"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+authors = ["Matthias Vogelgesang <matthias.vogelgesang@gmail.com>"]
+description = "chromazone is a line-oriented match and colorization tool."
+documentation = "https://github.com/matze/chromazone"
+homepage = "https://github.com/matze/chromazone"
+repository = "https://github.com/matze/chromazone"
+license = "MIT"
 
 [[bin]]
 name = "cz"
@@ -10,3 +16,8 @@ path = "src/main.rs"
 [dependencies]
 owo-colors = "4.0.0"
 regex = "1.10.3"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = "debuginfo"
