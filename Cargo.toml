@@ -1,6 +1,6 @@
 [package]
 name = "chromazone"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["Matthias Vogelgesang <matthias.vogelgesang@gmail.com>"]
 description = "chromazone is a line-oriented match and colorization tool."
