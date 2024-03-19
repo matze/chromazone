@@ -97,12 +97,12 @@ impl<'input, 'style> Iterator for Regions<'input, 'style> {
     type Item = Region<'input, 'style>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.text.is_empty() {
-            return None;
-        }
-
         if let Some((text, style)) = self.previous.take() {
             return Some(Region::Matched { text, style });
+        }
+
+        if self.text.is_empty() {
+            return None;
         }
 
         match self.styles.find_match(self.text) {
@@ -310,5 +310,37 @@ mod tests {
         ));
 
         assert!(regions.next().is_none());
+    }
+
+    #[test]
+    fn do_not_lose_text() {
+        let styles = &[
+            MatchStyle {
+                pattern: Regex::new("foo").unwrap(),
+                style: Style::new(),
+            },
+            MatchStyle {
+                pattern: Regex::new("bar").unwrap(),
+                style: Style::new(),
+            },
+        ];
+
+        let parser = Parser::new(styles);
+        let mut regions = parser.regions("foo bar");
+
+        assert!(matches!(
+            regions.next(),
+            Some(Region::Matched { text: "foo", .. })
+        ));
+
+        assert!(matches!(
+            regions.next(),
+            Some(Region::Unmatched { text: " " })
+        ));
+
+        assert!(matches!(
+            regions.next(),
+            Some(Region::Matched { text: "bar", .. })
+        ));
     }
 }
